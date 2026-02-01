@@ -1,0 +1,24 @@
+<meta charset="UTF-8" />
+<div>
+  <h2>LIFF ミニアプリ：動画再生</h2>
+  <p>userId: <span id="userId">読み込み中...</span></p>
+
+  <div style="font-size:12px; opacity:0.8; line-height:1.6;">
+    <div>inClient: <span id="dbg_inClient">-</span></div>
+    <div>loggedIn: <span id="dbg_loggedIn">-</span></div>
+    <div>idToken.sub: <span id="dbg_tokenSub">-</span></div>
+    <div>profile.userId: <span id="dbg_profileUserId">-</span></div>
+    <div>profile err: <span id="dbg_profileErr">-</span></div>
+    <div>loadedmetadata: <span id="dbg_loadedmetadata">-</span></div>
+    <div>timeupdate: <span id="dbg_timeupdate">-</span></div>
+    <div>playing: <span id="dbg_playing">-</span></div>
+    <div>video err: <span id="dbg_videoErr">-</span></div>
+  </div>
+
+  <video id="video" controls playsinline preload="metadata" style="width:100%;max-width:480px;">
+    <source src="video/sample.mp4" type="video/mp4" />
+  </video>
+
+  <p>視聴位置: <span id="pos">0</span> 秒</p>
+
+</div>
