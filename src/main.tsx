@@ -1,6 +1,6 @@
 import liff from "@line/liff";
 
-const LIFF_ID: string = import.meta.env.VITE_LIFF_ID;
+const LIFF_ID: string | undefined = import.meta.env.VITE_LIFF_ID;
 
 function mustGet<T extends Element>(selector: string): T {
   const el = document.querySelector(selector);
@@ -14,25 +14,36 @@ function setText(selector: string, text: string) {
 }
 
 async function main(): Promise<void> {
+  // DOM
   const userIdEl = mustGet<HTMLSpanElement>("#userId");
   const posEl = mustGet<HTMLSpanElement>("#pos");
   const videoEl = mustGet<HTMLVideoElement>("#video");
 
+  // まずここが出れば「JSは動いてる」
+  setText("#dbg_inClient", "booting...");
+
+  // envチェック
+  if (!LIFF_ID) {
+    userIdEl.textContent = "VITE_LIFF_ID が未設定です（Vercelの環境変数を確認）";
+    setText("#dbg_inClient", "env missing");
+    return;
+  }
+
   // --- LIFF init ---
   await liff.init({ liffId: LIFF_ID });
 
-  // デバッグ表示（まずここで「LINE内か」「ログイン済みか」を確定）
   setText("#dbg_inClient", String(liff.isInClient()));
   setText("#dbg_loggedIn", String(liff.isLoggedIn()));
 
+  // 未ログインならログインへ
   if (!liff.isLoggedIn()) {
-    // LINE外で開いてる/初回など。まずログインさせる
+    userIdEl.textContent = "loginへリダイレクト中...";
     liff.login();
     return;
   }
 
-  // --- userId取得（2経路で試す）---
-  const idToken = liff.getDecodedIDToken(); // openid scope必須
+  // --- userId取得（2経路）---
+  const idToken = liff.getDecodedIDToken(); // openid scopeが必要
   const userIdFromToken = idToken?.sub;
 
   let userIdFromProfile: string | undefined;
@@ -40,17 +51,15 @@ async function main(): Promise<void> {
     const profile = await liff.getProfile(); // profile scope推奨
     userIdFromProfile = profile.userId;
   } catch (e) {
-    // getProfileが失敗するケースもあるので握りつぶさず表示
     setText("#dbg_profileErr", e instanceof Error ? e.message : String(e));
   }
 
   setText("#dbg_tokenSub", userIdFromToken ?? "null");
   setText("#dbg_profileUserId", userIdFromProfile ?? "null");
 
-  // 最終的に表示する userId
   userIdEl.textContent = userIdFromToken ?? userIdFromProfile ?? "取得できません";
 
-  // --- 動画イベントのデバッグ ---
+  // --- 動画イベント ---
   const KEY = "video_progress_seconds";
 
   videoEl.addEventListener("loadedmetadata", () => {
